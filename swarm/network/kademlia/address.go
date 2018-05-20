@@ -1,18 +1,18 @@
-// Copyright 2016 The go-ethereum Authors
-// This file is part of the go-ethereum library.
+// Copyright 2016 The go-etherfact Authors
+// This file is part of the go-etherfact library.
 //
-// The go-ethereum library is free software: you can redistribute it and/or modify
+// The go-etherfact library is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// The go-ethereum library is distributed in the hope that it will be useful,
+// The go-etherfact library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU Lesser General Public License for more details.
 //
 // You should have received a copy of the GNU Lesser General Public License
-// along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
+// along with the go-etherfact library. If not, see <http://www.gnu.org/licenses/>.
 
 package kademlia
 
@@ -21,7 +21,7 @@ import (
 	"math/rand"
 	"strings"
 
-	"github.com/ethereum/go-ethereum/common"
+	"github.com/EtherFact-Project/go-etherfact/common"
 )
 
 type Address common.Hash
@@ -51,7 +51,7 @@ func (a Address) Bin() string {
 /*
 Proximity(x, y) returns the proximity order of the MSB distance between x and y
 
-The distance metric MSB(x, y) of two equal length byte sequences x and y is the
+The distance metric MSB(x, y) of two equal length byte sequences x an y is the
 value of the binary integer cast of the x^y, ie., x and y bitwise xor-ed.
 the binary cast is big endian: most significant bit first (=MSB).
 

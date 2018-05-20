@@ -1,18 +1,18 @@
-// Copyright 2017 The go-ethereum Authors
-// This file is part of the go-ethereum library.
+// Copyright 2017 The go-etherfact Authors
+// This file is part of the go-etherfact library.
 //
-// The go-ethereum library is free software: you can redistribute it and/or modify
+// The go-etherfact library is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// The go-ethereum library is distributed in the hope that it will be useful,
+// The go-etherfact library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU Lesser General Public License for more details.
 //
 // You should have received a copy of the GNU Lesser General Public License
-// along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
+// along with the go-etherfact library. If not, see <http://www.gnu.org/licenses/>.
 
 // Package usbwallet implements support for USB hardware wallets.
 package usbwallet
@@ -25,11 +25,11 @@ import (
 	"sync"
 	"time"
 
-	ethereum "github.com/ethereum/go-ethereum"
-	"github.com/ethereum/go-ethereum/accounts"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/log"
+	ethereum "github.com/EtherFact-Project/go-etherfact"
+	"github.com/EtherFact-Project/go-etherfact/accounts"
+	"github.com/EtherFact-Project/go-etherfact/common"
+	"github.com/EtherFact-Project/go-etherfact/core/types"
+	"github.com/EtherFact-Project/go-etherfact/log"
 	"github.com/karalabe/hid"
 )
 
@@ -99,7 +99,7 @@ type wallet struct {
 	//
 	// As such, a hardware wallet needs two locks to function correctly. A state
 	// lock can be used to protect the wallet's software-side internal state, which
-	// must not be held exclusively during hardware communication. A communication
+	// must not be held exlusively during hardware communication. A communication
 	// lock can be used to achieve exclusive access to the device itself, this one
 	// however should allow "skipping" waiting for operations that might want to
 	// use the device, but can live without too (e.g. account self-derivation).

@@ -1,18 +1,18 @@
-// Copyright 2017 The go-ethereum Authors
-// This file is part of go-ethereum.
+// Copyright 2017 The go-etherfact Authors
+// This file is part of go-etherfact.
 //
-// go-ethereum is free software: you can redistribute it and/or modify
+// go-etherfact is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// go-ethereum is distributed in the hope that it will be useful,
+// go-etherfact is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with go-ethereum. If not, see <http://www.gnu.org/licenses/>.
+// along with go-etherfact. If not, see <http://www.gnu.org/licenses/>.
 
 package main
 
@@ -21,22 +21,22 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"math/big"
 	"os"
-	goruntime "runtime"
 	"runtime/pprof"
 	"time"
 
-	"github.com/ethereum/go-ethereum/cmd/evm/internal/compiler"
-	"github.com/ethereum/go-ethereum/cmd/utils"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core"
-	"github.com/ethereum/go-ethereum/core/state"
-	"github.com/ethereum/go-ethereum/core/vm"
-	"github.com/ethereum/go-ethereum/core/vm/runtime"
-	"github.com/ethereum/go-ethereum/ethdb"
-	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/params"
+	goruntime "runtime"
+
+	"github.com/EtherFact-Project/go-etherfact/cmd/evm/internal/compiler"
+	"github.com/EtherFact-Project/go-etherfact/cmd/utils"
+	"github.com/EtherFact-Project/go-etherfact/common"
+	"github.com/EtherFact-Project/go-etherfact/core"
+	"github.com/EtherFact-Project/go-etherfact/core/state"
+	"github.com/EtherFact-Project/go-etherfact/core/vm"
+	"github.com/EtherFact-Project/go-etherfact/core/vm/runtime"
+	"github.com/EtherFact-Project/go-etherfact/ethdb"
+	"github.com/EtherFact-Project/go-etherfact/log"
+	"github.com/EtherFact-Project/go-etherfact/params"
 	cli "gopkg.in/urfave/cli.v1"
 )
 
@@ -86,7 +86,6 @@ func runCmd(ctx *cli.Context) error {
 		chainConfig *params.ChainConfig
 		sender      = common.BytesToAddress([]byte("sender"))
 		receiver    = common.BytesToAddress([]byte("receiver"))
-		blockNumber uint64
 	)
 	if ctx.GlobalBool(MachineFlag.Name) {
 		tracer = NewJSONLogger(logconfig, os.Stdout)
@@ -98,13 +97,13 @@ func runCmd(ctx *cli.Context) error {
 	}
 	if ctx.GlobalString(GenesisFlag.Name) != "" {
 		gen := readGenesis(ctx.GlobalString(GenesisFlag.Name))
-		db := ethdb.NewMemDatabase()
+		db, _ := ethdb.NewMemDatabase()
 		genesis := gen.ToBlock(db)
 		statedb, _ = state.New(genesis.Root(), state.NewDatabase(db))
 		chainConfig = gen.Config
-		blockNumber = gen.Number
 	} else {
-		statedb, _ = state.New(common.Hash{}, state.NewDatabase(ethdb.NewMemDatabase()))
+		db, _ := ethdb.NewMemDatabase()
+		statedb, _ = state.New(common.Hash{}, state.NewDatabase(db))
 	}
 	if ctx.GlobalString(SenderFlag.Name) != "" {
 		sender = common.HexToAddress(ctx.GlobalString(SenderFlag.Name))
@@ -157,12 +156,11 @@ func runCmd(ctx *cli.Context) error {
 
 	initialGas := ctx.GlobalUint64(GasFlag.Name)
 	runtimeConfig := runtime.Config{
-		Origin:      sender,
-		State:       statedb,
-		GasLimit:    initialGas,
-		GasPrice:    utils.GlobalBig(ctx, PriceFlag.Name),
-		Value:       utils.GlobalBig(ctx, ValueFlag.Name),
-		BlockNumber: new(big.Int).SetUint64(blockNumber),
+		Origin:   sender,
+		State:    statedb,
+		GasLimit: initialGas,
+		GasPrice: utils.GlobalBig(ctx, PriceFlag.Name),
+		Value:    utils.GlobalBig(ctx, ValueFlag.Name),
 		EVMConfig: vm.Config{
 			Tracer: tracer,
 			Debug:  ctx.GlobalBool(DebugFlag.Name) || ctx.GlobalBool(MachineFlag.Name),

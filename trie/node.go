@@ -1,18 +1,18 @@
-// Copyright 2014 The go-ethereum Authors
-// This file is part of the go-ethereum library.
+// Copyright 2014 The go-etherfact Authors
+// This file is part of the go-etherfact library.
 //
-// The go-ethereum library is free software: you can redistribute it and/or modify
+// The go-etherfact library is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// The go-ethereum library is distributed in the hope that it will be useful,
+// The go-etherfact library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU Lesser General Public License for more details.
 //
 // You should have received a copy of the GNU Lesser General Public License
-// along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
+// along with the go-etherfact library. If not, see <http://www.gnu.org/licenses/>.
 
 package trie
 
@@ -21,8 +21,8 @@ import (
 	"io"
 	"strings"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/EtherFact-Project/go-etherfact/common"
+	"github.com/EtherFact-Project/go-etherfact/rlp"
 )
 
 var indices = []string{"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f", "[17]"}
@@ -123,17 +123,17 @@ func decodeNode(hash, buf []byte, cachegen uint16) (node, error) {
 	}
 	switch c, _ := rlp.CountValues(elems); c {
 	case 2:
-		n, err := decodeShort(hash, elems, cachegen)
+		n, err := decodeShort(hash, buf, elems, cachegen)
 		return n, wrapError(err, "short")
 	case 17:
-		n, err := decodeFull(hash, elems, cachegen)
+		n, err := decodeFull(hash, buf, elems, cachegen)
 		return n, wrapError(err, "full")
 	default:
 		return nil, fmt.Errorf("invalid number of list elements: %v", c)
 	}
 }
 
-func decodeShort(hash, elems []byte, cachegen uint16) (node, error) {
+func decodeShort(hash, buf, elems []byte, cachegen uint16) (node, error) {
 	kbuf, rest, err := rlp.SplitString(elems)
 	if err != nil {
 		return nil, err
@@ -155,7 +155,7 @@ func decodeShort(hash, elems []byte, cachegen uint16) (node, error) {
 	return &shortNode{key, r, flag}, nil
 }
 
-func decodeFull(hash, elems []byte, cachegen uint16) (*fullNode, error) {
+func decodeFull(hash, buf, elems []byte, cachegen uint16) (*fullNode, error) {
 	n := &fullNode{flags: nodeFlag{hash: hash, gen: cachegen}}
 	for i := 0; i < 16; i++ {
 		cld, rest, err := decodeRef(elems, cachegen)

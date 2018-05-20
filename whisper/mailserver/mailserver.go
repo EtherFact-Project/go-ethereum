@@ -1,18 +1,18 @@
-// Copyright 2017 The go-ethereum Authors
-// This file is part of the go-ethereum library.
+// Copyright 2017 The go-etherfact Authors
+// This file is part of the go-etherfact library.
 //
-// The go-ethereum library is free software: you can redistribute it and/or modify
+// The go-etherfact library is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// The go-ethereum library is distributed in the hope that it will be useful,
+// The go-etherfact library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU Lesser General Public License for more details.
 //
 // You should have received a copy of the GNU Lesser General Public License
-// along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
+// along with the go-etherfact library. If not, see <http://www.gnu.org/licenses/>.
 
 package mailserver
 
@@ -20,11 +20,12 @@ import (
 	"encoding/binary"
 	"fmt"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/rlp"
-	whisper "github.com/ethereum/go-ethereum/whisper/whisperv6"
+	"github.com/EtherFact-Project/go-etherfact/cmd/utils"
+	"github.com/EtherFact-Project/go-etherfact/common"
+	"github.com/EtherFact-Project/go-etherfact/crypto"
+	"github.com/EtherFact-Project/go-etherfact/log"
+	"github.com/EtherFact-Project/go-etherfact/rlp"
+	whisper "github.com/EtherFact-Project/go-etherfact/whisper/whisperv6"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/util"
 )
@@ -53,19 +54,19 @@ func NewDbKey(t uint32, h common.Hash) *DBKey {
 	return &k
 }
 
-func (s *WMailServer) Init(shh *whisper.Whisper, path string, password string, pow float64) error {
+func (s *WMailServer) Init(shh *whisper.Whisper, path string, password string, pow float64) {
 	var err error
 	if len(path) == 0 {
-		return fmt.Errorf("DB file is not specified")
+		utils.Fatalf("DB file is not specified")
 	}
 
 	if len(password) == 0 {
-		return fmt.Errorf("password is not specified")
+		utils.Fatalf("Password is not specified for MailServer")
 	}
 
 	s.db, err = leveldb.OpenFile(path, nil)
 	if err != nil {
-		return fmt.Errorf("open DB file: %s", err)
+		utils.Fatalf("Failed to open DB file: %s", err)
 	}
 
 	s.w = shh
@@ -73,13 +74,12 @@ func (s *WMailServer) Init(shh *whisper.Whisper, path string, password string, p
 
 	MailServerKeyID, err := s.w.AddSymKeyFromPassword(password)
 	if err != nil {
-		return fmt.Errorf("create symmetric key: %s", err)
+		utils.Fatalf("Failed to create symmetric key for MailServer: %s", err)
 	}
 	s.key, err = s.w.GetSymKey(MailServerKeyID)
 	if err != nil {
-		return fmt.Errorf("save symmetric key: %s", err)
+		utils.Fatalf("Failed to save symmetric key for MailServer")
 	}
-	return nil
 }
 
 func (s *WMailServer) Close() {

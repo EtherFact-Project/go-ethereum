@@ -1,18 +1,18 @@
-// Copyright 2017 The go-ethereum Authors
-// This file is part of go-ethereum.
+// Copyright 2017 The go-etherfact Authors
+// This file is part of go-etherfact.
 //
-// go-ethereum is free software: you can redistribute it and/or modify
+// go-etherfact is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// go-ethereum is distributed in the hope that it will be useful,
+// go-etherfact is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with go-ethereum. If not, see <http://www.gnu.org/licenses/>.
+// along with go-etherfact. If not, see <http://www.gnu.org/licenses/>.
 
 package main
 
@@ -26,11 +26,11 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/log"
+	"github.com/EtherFact-Project/go-etherfact/common"
+	"github.com/EtherFact-Project/go-etherfact/log"
 )
 
-// faucetDockerfile is the Dockerfile required to build a faucet container to
+// faucetDockerfile is the Dockerfile required to build an faucet container to
 // grant crypto tokens based on GitHub authentications.
 var faucetDockerfile = `
 FROM ethereum/client-go:alltools-latest
@@ -138,7 +138,7 @@ func deployFaucet(client *sshClient, network string, bootnodes []string, config 
 	return nil, client.Stream(fmt.Sprintf("cd %s && docker-compose -p %s up -d --build --force-recreate", workdir, network))
 }
 
-// faucetInfos is returned from a faucet status check to allow reporting various
+// faucetInfos is returned from an faucet status check to allow reporting various
 // configuration parameters.
 type faucetInfos struct {
 	node          *nodeInfos
@@ -181,7 +181,7 @@ func (info *faucetInfos) Report() map[string]string {
 	return report
 }
 
-// checkFaucet does a health-check against a faucet server to verify whether
+// checkFaucet does a health-check against an faucet server to verify whether
 // it's running, and if yes, gathering a collection of useful infos about it.
 func checkFaucet(client *sshClient, network string) (*faucetInfos, error) {
 	// Inspect a possible faucet container on the host

@@ -1,18 +1,18 @@
-// Copyright 2016 The go-ethereum Authors
-// This file is part of the go-ethereum library.
+// Copyright 2016 The go-etherfact Authors
+// This file is part of the go-etherfact library.
 //
-// The go-ethereum library is free software: you can redistribute it and/or modify
+// The go-etherfact library is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// The go-ethereum library is distributed in the hope that it will be useful,
+// The go-etherfact library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU Lesser General Public License for more details.
 //
 // You should have received a copy of the GNU Lesser General Public License
-// along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
+// along with the go-etherfact library. If not, see <http://www.gnu.org/licenses/>.
 
 package event
 
@@ -148,9 +148,7 @@ func (f *Feed) Send(value interface{}) (nsent int) {
 		f.sendCases[i].Send = rvalue
 	}
 
-	// Send until all channels except removeSub have been chosen. 'cases' tracks a prefix
-	// of sendCases. When a send succeeds, the corresponding case moves to the end of
-	// 'cases' and it shrinks by one element.
+	// Send until all channels except removeSub have been chosen.
 	cases := f.sendCases
 	for {
 		// Fast path: try sending without blocking before adding to the select set.
@@ -172,7 +170,6 @@ func (f *Feed) Send(value interface{}) (nsent int) {
 			index := f.sendCases.find(recv.Interface())
 			f.sendCases = f.sendCases.delete(index)
 			if index >= 0 && index < len(cases) {
-				// Shrink 'cases' too because the removed case was still active.
 				cases = f.sendCases[:len(cases)-1]
 			}
 		} else {

@@ -1,18 +1,18 @@
-// Copyright 2016 The go-ethereum Authors
-// This file is part of the go-ethereum library.
+// Copyright 2016 The go-etherfact Authors
+// This file is part of the go-etherfact library.
 //
-// The go-ethereum library is free software: you can redistribute it and/or modify
+// The go-etherfact library is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// The go-ethereum library is distributed in the hope that it will be useful,
+// The go-etherfact library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU Lesser General Public License for more details.
 //
 // You should have received a copy of the GNU Lesser General Public License
-// along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
+// along with the go-etherfact library. If not, see <http://www.gnu.org/licenses/>.
 
 package abi
 
@@ -25,8 +25,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/EtherFact-Project/go-etherfact/common"
+	"github.com/EtherFact-Project/go-etherfact/crypto"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -58,27 +58,11 @@ var jsonEventPledge = []byte(`{
   "type": "event"
 }`)
 
-var jsonEventMixedCase = []byte(`{
-	"anonymous": false,
-	"inputs": [{
-		"indexed": false, "name": "value", "type": "uint256"
-	  }, {
-		"indexed": false, "name": "_value", "type": "uint256"
-	  }, {
-		"indexed": false, "name": "Value", "type": "uint256"
-	}],
-	"name": "MixedCase",
-	"type": "event"
-  }`)
-
 // 1000000
 var transferData1 = "00000000000000000000000000000000000000000000000000000000000f4240"
 
 // "0x00Ce0d46d924CC8437c806721496599FC3FFA268", 2218516807680, "usd"
 var pledgeData1 = "00000000000000000000000000ce0d46d924cc8437c806721496599fc3ffa2680000000000000000000000000000000000000000000000000000020489e800007573640000000000000000000000000000000000000000000000000000000000"
-
-// 1000000,2218516807680,1000001
-var mixedCaseData1 = "00000000000000000000000000000000000000000000000000000000000f42400000000000000000000000000000000000000000000000000000020489e8000000000000000000000000000000000000000000000000000000000000000f4241"
 
 func TestEventId(t *testing.T) {
 	var table = []struct {
@@ -137,27 +121,6 @@ func TestEventTupleUnpack(t *testing.T) {
 		Value *big.Int
 	}
 
-	type EventTransferWithTag struct {
-		// this is valid because `value` is not exportable,
-		// so value is only unmarshalled into `Value1`.
-		value  *big.Int
-		Value1 *big.Int `abi:"value"`
-	}
-
-	type BadEventTransferWithSameFieldAndTag struct {
-		Value  *big.Int
-		Value1 *big.Int `abi:"value"`
-	}
-
-	type BadEventTransferWithDuplicatedTag struct {
-		Value1 *big.Int `abi:"value"`
-		Value2 *big.Int `abi:"value"`
-	}
-
-	type BadEventTransferWithEmptyTag struct {
-		Value *big.Int `abi:""`
-	}
-
 	type EventPledge struct {
 		Who      common.Address
 		Wad      *big.Int
@@ -170,16 +133,9 @@ func TestEventTupleUnpack(t *testing.T) {
 		Currency [3]byte
 	}
 
-	type EventMixedCase struct {
-		Value1 *big.Int `abi:"value"`
-		Value2 *big.Int `abi:"_value"`
-		Value3 *big.Int `abi:"Value"`
-	}
-
 	bigint := new(big.Int)
 	bigintExpected := big.NewInt(1000000)
 	bigintExpected2 := big.NewInt(2218516807680)
-	bigintExpected3 := big.NewInt(1000001)
 	addr := common.HexToAddress("0x00Ce0d46d924CC8437c806721496599FC3FFA268")
 	var testCases = []struct {
 		data     string
@@ -202,34 +158,6 @@ func TestEventTupleUnpack(t *testing.T) {
 		jsonEventTransfer,
 		"",
 		"Can unpack ERC20 Transfer event into slice",
-	}, {
-		transferData1,
-		&EventTransferWithTag{},
-		&EventTransferWithTag{Value1: bigintExpected},
-		jsonEventTransfer,
-		"",
-		"Can unpack ERC20 Transfer event into structure with abi: tag",
-	}, {
-		transferData1,
-		&BadEventTransferWithDuplicatedTag{},
-		&BadEventTransferWithDuplicatedTag{},
-		jsonEventTransfer,
-		"struct: abi tag in 'Value2' already mapped",
-		"Can not unpack ERC20 Transfer event with duplicated abi tag",
-	}, {
-		transferData1,
-		&BadEventTransferWithSameFieldAndTag{},
-		&BadEventTransferWithSameFieldAndTag{},
-		jsonEventTransfer,
-		"abi: multiple variables maps to the same abi field 'value'",
-		"Can not unpack ERC20 Transfer event with a field and a tag mapping to the same abi variable",
-	}, {
-		transferData1,
-		&BadEventTransferWithEmptyTag{},
-		&BadEventTransferWithEmptyTag{},
-		jsonEventTransfer,
-		"struct: abi tag in 'Value' is empty",
-		"Can not unpack ERC20 Transfer event with an empty tag",
 	}, {
 		pledgeData1,
 		&EventPledge{},
@@ -288,13 +216,6 @@ func TestEventTupleUnpack(t *testing.T) {
 		jsonEventPledge,
 		"abi: cannot unmarshal tuple into map[string]interface {}",
 		"Can not unpack Pledge event into map",
-	}, {
-		mixedCaseData1,
-		&EventMixedCase{},
-		&EventMixedCase{Value1: bigintExpected, Value2: bigintExpected2, Value3: bigintExpected3},
-		jsonEventMixedCase,
-		"",
-		"Can unpack abi variables with mixed case",
 	}}
 
 	for _, tc := range testCases {
@@ -306,7 +227,7 @@ func TestEventTupleUnpack(t *testing.T) {
 				assert.Nil(err, "Should be able to unpack event data.")
 				assert.Equal(tc.expected, tc.dest, tc.name)
 			} else {
-				assert.EqualError(err, tc.error, tc.name)
+				assert.EqualError(err, tc.error)
 			}
 		})
 	}
@@ -323,7 +244,7 @@ func unpackTestEventData(dest interface{}, hexData string, jsonEvent []byte, ass
 
 /*
 Taken from
-https://github.com/ethereum/go-ethereum/pull/15568
+https://github.com/EtherFact-Project/go-etherfact/pull/15568
 */
 
 type testResult struct {

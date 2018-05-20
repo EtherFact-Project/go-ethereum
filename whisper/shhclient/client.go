@@ -1,28 +1,28 @@
-// Copyright 2017 The go-ethereum Authors
-// This file is part of the go-ethereum library.
+// Copyright 2017 The go-etherfact Authors
+// This file is part of the go-etherfact library.
 //
-// The go-ethereum library is free software: you can redistribute it and/or modify
+// The go-etherfact library is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// The go-ethereum library is distributed in the hope that it will be useful,
+// The go-etherfact library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU Lesser General Public License for more details.
 //
 // You should have received a copy of the GNU Lesser General Public License
-// along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
+// along with the go-etherfact library. If not, see <http://www.gnu.org/licenses/>.
 
 package shhclient
 
 import (
 	"context"
 
-	"github.com/ethereum/go-ethereum"
-	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/ethereum/go-ethereum/rpc"
-	whisper "github.com/ethereum/go-ethereum/whisper/whisperv6"
+	"github.com/EtherFact-Project/go-etherfact"
+	"github.com/EtherFact-Project/go-etherfact/common/hexutil"
+	"github.com/EtherFact-Project/go-etherfact/rpc"
+	whisper "github.com/EtherFact-Project/go-etherfact/whisper/whisperv6"
 )
 
 // Client defines typed wrappers for the Whisper v6 RPC API.
@@ -67,6 +67,7 @@ func (sc *Client) SetMaxMessageSize(ctx context.Context, size uint32) error {
 }
 
 // SetMinimumPoW (experimental) sets the minimal PoW required by this node.
+
 // This experimental function was introduced for the future dynamic adjustment of
 // PoW requirement. If the node is overwhelmed with messages, it should raise the
 // PoW requirement and notify the peers. The new value should be set relative to
@@ -76,7 +77,7 @@ func (sc *Client) SetMinimumPoW(ctx context.Context, pow float64) error {
 	return sc.c.CallContext(ctx, &ignored, "shh_setMinPoW", pow)
 }
 
-// MarkTrustedPeer marks specific peer trusted, which will allow it to send historic (expired) messages.
+// Marks specific peer trusted, which will allow it to send historic (expired) messages.
 // Note This function is not adding new nodes, the node needs to exists as a peer.
 func (sc *Client) MarkTrustedPeer(ctx context.Context, enode string) error {
 	var ignored bool
@@ -135,9 +136,9 @@ func (sc *Client) AddSymmetricKey(ctx context.Context, key []byte) (string, erro
 }
 
 // GenerateSymmetricKeyFromPassword generates the key from password, stores it, and returns its identifier.
-func (sc *Client) GenerateSymmetricKeyFromPassword(ctx context.Context, passwd string) (string, error) {
+func (sc *Client) GenerateSymmetricKeyFromPassword(ctx context.Context, passwd []byte) (string, error) {
 	var id string
-	return id, sc.c.CallContext(ctx, &id, "shh_generateSymKeyFromPassword", passwd)
+	return id, sc.c.CallContext(ctx, &id, "shh_generateSymKeyFromPassword", hexutil.Bytes(passwd))
 }
 
 // HasSymmetricKey returns an indication if the key associated with the given id is stored in the node.

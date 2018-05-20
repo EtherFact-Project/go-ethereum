@@ -1,22 +1,23 @@
-// Copyright 2017 The go-ethereum Authors
-// This file is part of the go-ethereum library.
+// Copyright 2017 The go-etherfact Authors
+// This file is part of the go-etherfact library.
 //
-// The go-ethereum library is free software: you can redistribute it and/or modify
+// The go-etherfact library is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// The go-ethereum library is distributed in the hope that it will be useful,
+// The go-etherfact library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU Lesser General Public License for more details.
 //
 // You should have received a copy of the GNU Lesser General Public License
-// along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
+// along with the go-etherfact library. If not, see <http://www.gnu.org/licenses/>.
 
 package adapters
 
 import (
+	"bufio"
 	"context"
 	"crypto/ecdsa"
 	"encoding/json"
@@ -28,17 +29,18 @@ import (
 	"os/exec"
 	"os/signal"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"sync"
 	"syscall"
 	"time"
 
 	"github.com/docker/docker/pkg/reexec"
-	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/node"
-	"github.com/ethereum/go-ethereum/p2p"
-	"github.com/ethereum/go-ethereum/p2p/discover"
-	"github.com/ethereum/go-ethereum/rpc"
+	"github.com/EtherFact-Project/go-etherfact/log"
+	"github.com/EtherFact-Project/go-etherfact/node"
+	"github.com/EtherFact-Project/go-etherfact/p2p"
+	"github.com/EtherFact-Project/go-etherfact/p2p/discover"
+	"github.com/EtherFact-Project/go-etherfact/rpc"
 	"golang.org/x/net/websocket"
 )
 
@@ -148,6 +150,10 @@ func (n *ExecNode) Client() (*rpc.Client, error) {
 	return n.client, nil
 }
 
+// wsAddrPattern is a regex used to read the WebSocket address from the node's
+// log
+var wsAddrPattern = regexp.MustCompile(`ws://[\d.:]+`)
+
 // Start exec's the node passing the ID and service as command line arguments
 // and the node config encoded as JSON in the _P2P_NODE_CONFIG environment
 // variable
@@ -190,9 +196,23 @@ func (n *ExecNode) Start(snapshots map[string][]byte) (err error) {
 	n.Cmd = cmd
 
 	// read the WebSocket address from the stderr logs
-	wsAddr, err := findWSAddr(stderrR, 10*time.Second)
-	if err != nil {
-		return fmt.Errorf("error getting WebSocket address: %s", err)
+	var wsAddr string
+	wsAddrC := make(chan string)
+	go func() {
+		s := bufio.NewScanner(stderrR)
+		for s.Scan() {
+			if strings.Contains(s.Text(), "WebSocket endpoint opened:") {
+				wsAddrC <- wsAddrPattern.FindString(s.Text())
+			}
+		}
+	}()
+	select {
+	case wsAddr = <-wsAddrC:
+		if wsAddr == "" {
+			return errors.New("failed to read WebSocket address from stderr")
+		}
+	case <-time.After(10 * time.Second):
+		return errors.New("timed out waiting for WebSocket address on stderr")
 	}
 
 	// create the RPC client and load the node info

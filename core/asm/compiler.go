@@ -1,29 +1,30 @@
-// Copyright 2017 The go-ethereum Authors
-// This file is part of the go-ethereum library.
+// Copyright 2017 The go-etherfact Authors
+// This file is part of the go-etherfact library.
 //
-// The go-ethereum library is free software: you can redistribute it and/or modify
+// The go-etherfact library is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// The go-ethereum library is distributed in the hope that it will be useful,
+// The go-etherfact library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU Lesser General Public License for more details.
 //
 // You should have received a copy of the GNU Lesser General Public License
-// along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
+// along with the go-etherfact library. If not, see <http://www.gnu.org/licenses/>.
 
 package asm
 
 import (
+	"errors"
 	"fmt"
 	"math/big"
 	"os"
 	"strings"
 
-	"github.com/ethereum/go-ethereum/common/math"
-	"github.com/ethereum/go-ethereum/core/vm"
+	"github.com/EtherFact-Project/go-etherfact/common/math"
+	"github.com/EtherFact-Project/go-etherfact/core/vm"
 )
 
 // Compiler contains information about the parsed source
@@ -236,16 +237,19 @@ func (c *Compiler) pushBin(v interface{}) {
 // isPush returns whether the string op is either any of
 // push(N).
 func isPush(op string) bool {
-	return strings.ToUpper(op) == "PUSH"
+	return op == "push"
 }
 
 // isJump returns whether the string op is jump(i)
 func isJump(op string) bool {
-	return strings.ToUpper(op) == "JUMPI" || strings.ToUpper(op) == "JUMP"
+	return op == "jumpi" || op == "jump"
 }
 
 // toBinary converts text to a vm.OpCode
 func toBinary(text string) vm.OpCode {
+	if isPush(text) {
+		text = "push1"
+	}
 	return vm.StringToOp(strings.ToUpper(text))
 }
 
@@ -259,6 +263,11 @@ type compileError struct {
 func (err compileError) Error() string {
 	return fmt.Sprintf("%d syntax error: unexpected %v, expected %v", err.lineno, err.got, err.want)
 }
+
+var (
+	errExpBol            = errors.New("expected beginning of line")
+	errExpElementOrLabel = errors.New("expected beginning of line")
+)
 
 func compileErr(c token, got, want string) error {
 	return compileError{

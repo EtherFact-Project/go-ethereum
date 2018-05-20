@@ -1,6 +1,6 @@
 ## Go Ethereum Dashboard
 
-The dashboard is a data visualizer integrated into geth, intended to collect and visualize useful information of an Ethereum node. It consists of two parts:
+The dashboard is a data visualizer integrated into getf, intended to collect and visualize useful information of an Ethereum node. It consists of two parts:
 
 * The client visualizes the collected data.
 * The server collects the data, and updates the clients.
@@ -9,7 +9,7 @@ The client's UI uses [React][React] with JSX syntax, which is validated by the [
 
 ### Development and bundling
 
-As the dashboard depends on certain NPM packages (which are not included in the `go-ethereum` repo), these need to be installed first:
+As the dashboard depends on certain NPM packages (which are not included in the `go-etherfact` repo), these need to be installed first:
 
 ```
 $ (cd dashboard/assets && yarn install && yarn flow)
@@ -18,7 +18,7 @@ $ (cd dashboard/assets && yarn install && yarn flow)
 Normally the dashboard assets are bundled into Geth via `go-bindata` to avoid external dependencies. Rebuilding Geth after each UI modification however is not feasible from a developer perspective. Instead, we can run `yarn dev` to watch for file system changes and refresh the browser automatically.
 
 ```
-$ geth --dashboard --vmodule=dashboard=5
+$ getf --dashboard --vmodule=dashboard=5
 $ (cd dashboard/assets && yarn dev)
 ```
 

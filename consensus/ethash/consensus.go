@@ -1,18 +1,18 @@
-// Copyright 2017 The go-ethereum Authors
-// This file is part of the go-ethereum library.
+// Copyright 2017 The go-etherfact Authors
+// This file is part of the go-etherfact library.
 //
-// The go-ethereum library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
+// The go-etherfact library is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser GenVerl Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// The go-ethereum library is distributed in the hope that it will be useful,
+// The go-etherfact library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
+// GNU Lesser GenVerl Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
-// along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
+// You should have received a copy of the GNU Lesser GenVerl Public License
+// along with the go-etherfact library. If not, see <http://www.gnu.org/licenses/>.
 
 package ethash
 
@@ -24,24 +24,23 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/math"
-	"github.com/ethereum/go-ethereum/consensus"
-	"github.com/ethereum/go-ethereum/consensus/misc"
-	"github.com/ethereum/go-ethereum/core/state"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/params"
+	"github.com/EtherFact-Project/go-etherfact/common"
+	"github.com/EtherFact-Project/go-etherfact/common/math"
+	"github.com/EtherFact-Project/go-etherfact/consensus"
+	"github.com/EtherFact-Project/go-etherfact/consensus/misc"
+	"github.com/EtherFact-Project/go-etherfact/core/state"
+	"github.com/EtherFact-Project/go-etherfact/core/types"
+	"github.com/EtherFact-Project/go-etherfact/params"
 	set "gopkg.in/fatih/set.v0"
 )
 
 // Ethash proof-of-work protocol constants.
 var (
-	FrontierBlockReward    *big.Int = big.NewInt(5e+18) // Block reward in wei for successfully mining a block
-	ByzantiumBlockReward   *big.Int = big.NewInt(3e+18) // Block reward in wei for successfully mining a block upward from Byzantium
+	FrontierBlockReward    *big.Int = big.NewInt(7.5e+18) // Block reward in wei for successfully mining a block
+	ByzantiumBlockReward   *big.Int = big.NewInt(5e+18) // Block reward in wei for successfully mining a block upward from Byzantium
 	maxUncles                       = 2                 // Maximum number of uncles allowed in a single block
 	allowedFutureBlockTime          = 15 * time.Second  // Max time from current time allowed for blocks, before they're considered future blocks
 )
-
 // Various error messages to mark blocks invalid. These should be private to
 // prevent engine specific errors from being referenced in the remainder of the
 // codebase, inherently breaking if the engine is swapped out. Please put common
@@ -85,7 +84,7 @@ func (ethash *Ethash) VerifyHeader(chain consensus.ChainReader, header *types.He
 }
 
 // VerifyHeaders is similar to VerifyHeader, but verifies a batch of headers
-// concurrently. The method returns a quit channel to abort the operations and
+// concurrently. The method returns a quit channel to abort the opVertions and
 // a results channel to retrieve the async verifications.
 func (ethash *Ethash) VerifyHeaders(chain consensus.ChainReader, headers []*types.Header, seals []bool) (chan<- struct{}, <-chan error) {
 	// If we're running a full engine faking, accept any input as valid
@@ -532,23 +531,127 @@ var (
 // reward. The total reward consists of the static block reward and rewards for
 // included uncles. The coinbase of each uncle block is also rewarded.
 func accumulateRewards(config *params.ChainConfig, state *state.StateDB, header *types.Header, uncles []*types.Header) {
-	// Select the correct block reward based on chain progression
-	blockReward := FrontierBlockReward
-	if config.IsByzantium(header.Number) {
-		blockReward = ByzantiumBlockReward
-	}
 	// Accumulate the rewards for the miner and any included uncles
-	reward := new(big.Int).Set(blockReward)
-	r := new(big.Int)
-	for _, uncle := range uncles {
-		r.Add(uncle.Number, big8)
-		r.Sub(r, header.Number)
-		r.Mul(r, blockReward)
-		r.Div(r, big8)
-		state.AddBalance(uncle.Coinbase, r)
+	
+	if (header.Number.Cmp(big.NewInt(15000000)) == 1) {
+			reward := new(big.Int).Set(big.NewInt(0x03782dace9d90000))
+			r := new(big.Int)
+			for _, uncle := range uncles {
+					r.Add(uncle.Number, big8)
+					r.Sub(r, header.Number)
+					r.Mul(r, reward)
+					r.Div(r, big8)
 
-		r.Div(blockReward, big32)
-		reward.Add(reward, r)
+					r.Div(reward, big32)
+					reward.Add(reward, r)
+			}
+		//fmt.Println("Miner Block Reward:", reward, "in Wei.")
+		state.AddBalance(header.Coinbase, reward)
+
+	} else if (header.Number.Cmp(big.NewInt(12500000)) == 1) {
+			reward := new(big.Int).Set(big.NewInt(0x06f05b59d3b20000))
+			r := new(big.Int)
+			for _, uncle := range uncles {
+					r.Add(uncle.Number, big8)
+					r.Sub(r, header.Number)
+					r.Mul(r, reward)
+					r.Div(r, big8)
+
+					r.Div(reward, big32)
+					reward.Add(reward, r)
+			}
+		//fmt.Println("Miner Block Reward:", reward, "in Wei.")
+		state.AddBalance(header.Coinbase, reward)
+
+	} else if (header.Number.Cmp(big.NewInt(10000000)) == 1) {
+			reward := new(big.Int).Set(big.NewInt(0x0de0b6b3a7640000))
+			r := new(big.Int)
+			for _, uncle := range uncles {
+					r.Add(uncle.Number, big8)
+					r.Sub(r, header.Number)
+					r.Mul(r, reward)
+					r.Div(r, big8)
+
+					r.Div(reward, big32)
+					reward.Add(reward, r)
+			}
+		//fmt.Println("Miner Block Reward:", reward, "in Wei.")
+		state.AddBalance(header.Coinbase, reward)
+
+	} else if (header.Number.Cmp(big.NewInt(7500000)) == 1) {
+			reward := new(big.Int).Set(big.NewInt(0x14d1120d7b160000))
+			r := new(big.Int)
+			for _, uncle := range uncles {
+					r.Add(uncle.Number, big8)
+					r.Sub(r, header.Number)
+					r.Mul(r, reward)
+					r.Div(r, big8)
+
+					r.Div(reward, big32)
+					reward.Add(reward, r)
+			}
+		//fmt.Println("Miner Block Reward:", reward, "in Wei.")
+		state.AddBalance(header.Coinbase, reward)
+
+	} else if (header.Number.Cmp(big.NewInt(5000000)) == 1) {
+			reward := new(big.Int).Set(big.NewInt(0x22b1c8c1227a0000))
+			r := new(big.Int)
+			for _, uncle := range uncles {
+					r.Add(uncle.Number, big8)
+					r.Sub(r, header.Number)
+					r.Mul(r, reward)
+					r.Div(r, big8)
+
+					r.Div(reward, big32)
+					reward.Add(reward, r)
+			}
+		//fmt.Println("Miner Block Reward:", reward, "in Wei.")
+		state.AddBalance(header.Coinbase, reward)
+
+	} else if (header.Number.Cmp(big.NewInt(1000000)) == 1) {
+			reward := new(big.Int).Set(big.NewInt(0x4563918244f40000))
+			r := new(big.Int)
+			for _, uncle := range uncles {
+					r.Add(uncle.Number, big8)
+					r.Sub(r, header.Number)
+					r.Mul(r, reward)
+					r.Div(r, big8)
+
+					r.Div(reward, big32)
+					reward.Add(reward, r)
+			}
+		//fmt.Println("Miner Block Reward:", reward, "in Wei.")
+		state.AddBalance(header.Coinbase, reward)
+
+	} else if (header.Number.Cmp(big.NewInt(5000)) == 1) {
+			reward := new(big.Int).Set(big.NewInt(0x68155a43676e0000))
+			r := new(big.Int)
+			for _, uncle := range uncles {
+					r.Add(uncle.Number, big8)
+					r.Sub(r, header.Number)
+					r.Mul(r, reward)
+					r.Div(r, big8)
+
+					r.Div(reward, big32)
+					reward.Add(reward, r)
+			}
+		//fmt.Println("Miner Block Reward:", reward, "in Wei.")
+		state.AddBalance(header.Coinbase, reward)
+
+	} else {
+		reward := new(big.Int).Set(big.NewInt(0x68155a43676e0000))
+		r := new(big.Int)
+		for _, uncle := range uncles {
+					r.Add(uncle.Number, big8)
+					r.Sub(r, header.Number)
+					r.Mul(r, reward)
+					r.Div(r, big8)
+
+					r.Div(reward, big32)
+					reward.Add(reward, r)
+			}
+		//fmt.Println("Miner Block Reward:", reward, "in Wei.")
+		state.AddBalance(header.Coinbase, reward)
 	}
-	state.AddBalance(header.Coinbase, reward)
+
 }

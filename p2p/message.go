@@ -1,18 +1,18 @@
-// Copyright 2014 The go-ethereum Authors
-// This file is part of the go-ethereum library.
+// Copyright 2014 The go-etherfact Authors
+// This file is part of the go-etherfact library.
 //
-// The go-ethereum library is free software: you can redistribute it and/or modify
+// The go-etherfact library is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// The go-ethereum library is distributed in the hope that it will be useful,
+// The go-etherfact library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU Lesser General Public License for more details.
 //
 // You should have received a copy of the GNU Lesser General Public License
-// along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
+// along with the go-etherfact library. If not, see <http://www.gnu.org/licenses/>.
 
 package p2p
 
@@ -25,9 +25,9 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/ethereum/go-ethereum/event"
-	"github.com/ethereum/go-ethereum/p2p/discover"
-	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/EtherFact-Project/go-etherfact/event"
+	"github.com/EtherFact-Project/go-etherfact/p2p/discover"
+	"github.com/EtherFact-Project/go-etherfact/rlp"
 )
 
 // Msg defines the structure of a p2p message.
@@ -229,20 +229,21 @@ func ExpectMsg(r MsgReader, code uint64, content interface{}) error {
 	}
 	if content == nil {
 		return msg.Discard()
-	}
-	contentEnc, err := rlp.EncodeToBytes(content)
-	if err != nil {
-		panic("content encode error: " + err.Error())
-	}
-	if int(msg.Size) != len(contentEnc) {
-		return fmt.Errorf("message size mismatch: got %d, want %d", msg.Size, len(contentEnc))
-	}
-	actualContent, err := ioutil.ReadAll(msg.Payload)
-	if err != nil {
-		return err
-	}
-	if !bytes.Equal(actualContent, contentEnc) {
-		return fmt.Errorf("message payload mismatch:\ngot:  %x\nwant: %x", actualContent, contentEnc)
+	} else {
+		contentEnc, err := rlp.EncodeToBytes(content)
+		if err != nil {
+			panic("content encode error: " + err.Error())
+		}
+		if int(msg.Size) != len(contentEnc) {
+			return fmt.Errorf("message size mismatch: got %d, want %d", msg.Size, len(contentEnc))
+		}
+		actualContent, err := ioutil.ReadAll(msg.Payload)
+		if err != nil {
+			return err
+		}
+		if !bytes.Equal(actualContent, contentEnc) {
+			return fmt.Errorf("message payload mismatch:\ngot:  %x\nwant: %x", actualContent, contentEnc)
+		}
 	}
 	return nil
 }
@@ -270,15 +271,15 @@ func newMsgEventer(rw MsgReadWriter, feed *event.Feed, peerID discover.NodeID, p
 
 // ReadMsg reads a message from the underlying MsgReadWriter and emits a
 // "message received" event
-func (ev *msgEventer) ReadMsg() (Msg, error) {
-	msg, err := ev.MsgReadWriter.ReadMsg()
+func (self *msgEventer) ReadMsg() (Msg, error) {
+	msg, err := self.MsgReadWriter.ReadMsg()
 	if err != nil {
 		return msg, err
 	}
-	ev.feed.Send(&PeerEvent{
+	self.feed.Send(&PeerEvent{
 		Type:     PeerEventTypeMsgRecv,
-		Peer:     ev.peerID,
-		Protocol: ev.Protocol,
+		Peer:     self.peerID,
+		Protocol: self.Protocol,
 		MsgCode:  &msg.Code,
 		MsgSize:  &msg.Size,
 	})
@@ -287,15 +288,15 @@ func (ev *msgEventer) ReadMsg() (Msg, error) {
 
 // WriteMsg writes a message to the underlying MsgReadWriter and emits a
 // "message sent" event
-func (ev *msgEventer) WriteMsg(msg Msg) error {
-	err := ev.MsgReadWriter.WriteMsg(msg)
+func (self *msgEventer) WriteMsg(msg Msg) error {
+	err := self.MsgReadWriter.WriteMsg(msg)
 	if err != nil {
 		return err
 	}
-	ev.feed.Send(&PeerEvent{
+	self.feed.Send(&PeerEvent{
 		Type:     PeerEventTypeMsgSend,
-		Peer:     ev.peerID,
-		Protocol: ev.Protocol,
+		Peer:     self.peerID,
+		Protocol: self.Protocol,
 		MsgCode:  &msg.Code,
 		MsgSize:  &msg.Size,
 	})
@@ -304,8 +305,8 @@ func (ev *msgEventer) WriteMsg(msg Msg) error {
 
 // Close closes the underlying MsgReadWriter if it implements the io.Closer
 // interface
-func (ev *msgEventer) Close() error {
-	if v, ok := ev.MsgReadWriter.(io.Closer); ok {
+func (self *msgEventer) Close() error {
+	if v, ok := self.MsgReadWriter.(io.Closer); ok {
 		return v.Close()
 	}
 	return nil

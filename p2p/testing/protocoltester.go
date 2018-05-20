@@ -1,18 +1,18 @@
-// Copyright 2017 The go-ethereum Authors
-// This file is part of the go-ethereum library.
+// Copyright 2017 The go-etherfact Authors
+// This file is part of the go-etherfact library.
 //
-// The go-ethereum library is free software: you can redistribute it and/or modify
+// The go-etherfact library is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// The go-ethereum library is distributed in the hope that it will be useful,
+// The go-etherfact library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU Lesser General Public License for more details.
 //
 // You should have received a copy of the GNU Lesser General Public License
-// along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
+// along with the go-etherfact library. If not, see <http://www.gnu.org/licenses/>.
 
 /*
 the p2p/testing package provides a unit test scheme to check simple
@@ -32,14 +32,14 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/node"
-	"github.com/ethereum/go-ethereum/p2p"
-	"github.com/ethereum/go-ethereum/p2p/discover"
-	"github.com/ethereum/go-ethereum/p2p/simulations"
-	"github.com/ethereum/go-ethereum/p2p/simulations/adapters"
-	"github.com/ethereum/go-ethereum/rlp"
-	"github.com/ethereum/go-ethereum/rpc"
+	"github.com/EtherFact-Project/go-etherfact/log"
+	"github.com/EtherFact-Project/go-etherfact/node"
+	"github.com/EtherFact-Project/go-etherfact/p2p"
+	"github.com/EtherFact-Project/go-etherfact/p2p/discover"
+	"github.com/EtherFact-Project/go-etherfact/p2p/simulations"
+	"github.com/EtherFact-Project/go-etherfact/p2p/simulations/adapters"
+	"github.com/EtherFact-Project/go-etherfact/rlp"
+	"github.com/EtherFact-Project/go-etherfact/rpc"
 )
 
 // ProtocolTester is the tester environment used for unit testing protocol
@@ -101,24 +101,24 @@ func NewProtocolTester(t *testing.T, id discover.NodeID, n int, run func(*p2p.Pe
 }
 
 // Stop stops the p2p server
-func (t *ProtocolTester) Stop() error {
-	t.Server.Stop()
+func (self *ProtocolTester) Stop() error {
+	self.Server.Stop()
 	return nil
 }
 
 // Connect brings up the remote peer node and connects it using the
 // p2p/simulations network connection with the in memory network adapter
-func (t *ProtocolTester) Connect(selfID discover.NodeID, peers ...*adapters.NodeConfig) {
+func (self *ProtocolTester) Connect(selfID discover.NodeID, peers ...*adapters.NodeConfig) {
 	for _, peer := range peers {
 		log.Trace(fmt.Sprintf("start node %v", peer.ID))
-		if _, err := t.network.NewNodeWithConfig(peer); err != nil {
+		if _, err := self.network.NewNodeWithConfig(peer); err != nil {
 			panic(fmt.Sprintf("error starting peer %v: %v", peer.ID, err))
 		}
-		if err := t.network.Start(peer.ID); err != nil {
+		if err := self.network.Start(peer.ID); err != nil {
 			panic(fmt.Sprintf("error starting peer %v: %v", peer.ID, err))
 		}
 		log.Trace(fmt.Sprintf("connect to %v", peer.ID))
-		if err := t.network.Connect(selfID, peer.ID); err != nil {
+		if err := self.network.Connect(selfID, peer.ID); err != nil {
 			panic(fmt.Sprintf("error connecting to peer %v: %v", peer.ID, err))
 		}
 	}

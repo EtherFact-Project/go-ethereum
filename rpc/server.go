@@ -1,18 +1,18 @@
-// Copyright 2015 The go-ethereum Authors
-// This file is part of the go-ethereum library.
+// Copyright 2015 The go-etherfact Authors
+// This file is part of the go-etherfact library.
 //
-// The go-ethereum library is free software: you can redistribute it and/or modify
+// The go-etherfact library is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// The go-ethereum library is distributed in the hope that it will be useful,
+// The go-etherfact library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU Lesser General Public License for more details.
 //
 // You should have received a copy of the GNU Lesser General Public License
-// along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
+// along with the go-etherfact library. If not, see <http://www.gnu.org/licenses/>.
 
 package rpc
 
@@ -25,7 +25,7 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/ethereum/go-ethereum/log"
+	"github.com/EtherFact-Project/go-etherfact/log"
 	"gopkg.in/fatih/set.v0"
 )
 
@@ -125,7 +125,7 @@ func (s *Server) RegisterName(name string, rcvr interface{}) error {
 // If singleShot is true it will process a single request, otherwise it will handle
 // requests until the codec returns an error when reading a request (in most cases
 // an EOF). It executes requests in parallel when singleShot is false.
-func (s *Server) serveRequest(ctx context.Context, codec ServerCodec, singleShot bool, options CodecOption) error {
+func (s *Server) serveRequest(codec ServerCodec, singleShot bool, options CodecOption) error {
 	var pend sync.WaitGroup
 
 	defer func() {
@@ -140,8 +140,7 @@ func (s *Server) serveRequest(ctx context.Context, codec ServerCodec, singleShot
 		s.codecsMu.Unlock()
 	}()
 
-	//	ctx, cancel := context.WithCancel(context.Background())
-	ctx, cancel := context.WithCancel(ctx)
+	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	// if the codec supports notification include a notifier that callbacks can use
@@ -216,14 +215,14 @@ func (s *Server) serveRequest(ctx context.Context, codec ServerCodec, singleShot
 // stopped. In either case the codec is closed.
 func (s *Server) ServeCodec(codec ServerCodec, options CodecOption) {
 	defer codec.Close()
-	s.serveRequest(context.Background(), codec, false, options)
+	s.serveRequest(codec, false, options)
 }
 
 // ServeSingleRequest reads and processes a single RPC request from the given codec. It will not
 // close the codec unless a non-recoverable error has occurred. Note, this method will return after
 // a single request has been processed!
-func (s *Server) ServeSingleRequest(ctx context.Context, codec ServerCodec, options CodecOption) {
-	s.serveRequest(ctx, codec, true, options)
+func (s *Server) ServeSingleRequest(codec ServerCodec, options CodecOption) {
+	s.serveRequest(codec, true, options)
 }
 
 // Stop will stop reading new requests, wait for stopPendingRequestTimeout to allow pending requests to finish,

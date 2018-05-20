@@ -1,18 +1,18 @@
-// Copyright 2017 The go-ethereum Authors
-// This file is part of the go-ethereum library.
+// Copyright 2017 The go-etherfact Authors
+// This file is part of the go-etherfact library.
 //
-// The go-ethereum library is free software: you can redistribute it and/or modify
+// The go-etherfact library is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// The go-ethereum library is distributed in the hope that it will be useful,
+// The go-etherfact library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU Lesser General Public License for more details.
 //
 // You should have received a copy of the GNU Lesser General Public License
-// along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
+// along with the go-etherfact library. If not, see <http://www.gnu.org/licenses/>.
 
 package enr
 
@@ -22,8 +22,8 @@ import (
 	"io"
 	"net"
 
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/EtherFact-Project/go-etherfact/crypto"
+	"github.com/EtherFact-Project/go-etherfact/rlp"
 )
 
 // Entry is implemented by known node record entry types.
@@ -57,43 +57,59 @@ func WithEntry(k string, v interface{}) Entry {
 	return &generic{key: k, value: v}
 }
 
-// TCP is the "tcp" key, which holds the TCP port of the node.
-type TCP uint16
+// DiscPort is the "discv5" key, which holds the UDP port for discovery v5.
+type DiscPort uint16
 
-func (v TCP) ENRKey() string { return "tcp" }
-
-// UDP is the "udp" key, which holds the UDP port of the node.
-type UDP uint16
-
-func (v UDP) ENRKey() string { return "udp" }
+func (v DiscPort) ENRKey() string { return "discv5" }
 
 // ID is the "id" key, which holds the name of the identity scheme.
 type ID string
 
-const IDv4 = ID("v4") // the default identity scheme
-
 func (v ID) ENRKey() string { return "id" }
 
-// IP is the "ip" key, which holds the IP address of the node.
-type IP net.IP
+// IP4 is the "ip4" key, which holds a 4-byte IPv4 address.
+type IP4 net.IP
 
-func (v IP) ENRKey() string { return "ip" }
+func (v IP4) ENRKey() string { return "ip4" }
 
 // EncodeRLP implements rlp.Encoder.
-func (v IP) EncodeRLP(w io.Writer) error {
-	if ip4 := net.IP(v).To4(); ip4 != nil {
-		return rlp.Encode(w, ip4)
+func (v IP4) EncodeRLP(w io.Writer) error {
+	ip4 := net.IP(v).To4()
+	if ip4 == nil {
+		return fmt.Errorf("invalid IPv4 address: %v", v)
 	}
-	return rlp.Encode(w, net.IP(v))
+	return rlp.Encode(w, ip4)
 }
 
 // DecodeRLP implements rlp.Decoder.
-func (v *IP) DecodeRLP(s *rlp.Stream) error {
+func (v *IP4) DecodeRLP(s *rlp.Stream) error {
 	if err := s.Decode((*net.IP)(v)); err != nil {
 		return err
 	}
-	if len(*v) != 4 && len(*v) != 16 {
-		return fmt.Errorf("invalid IP address, want 4 or 16 bytes: %v", *v)
+	if len(*v) != 4 {
+		return fmt.Errorf("invalid IPv4 address, want 4 bytes: %v", *v)
+	}
+	return nil
+}
+
+// IP6 is the "ip6" key, which holds a 16-byte IPv6 address.
+type IP6 net.IP
+
+func (v IP6) ENRKey() string { return "ip6" }
+
+// EncodeRLP implements rlp.Encoder.
+func (v IP6) EncodeRLP(w io.Writer) error {
+	ip6 := net.IP(v)
+	return rlp.Encode(w, ip6)
+}
+
+// DecodeRLP implements rlp.Decoder.
+func (v *IP6) DecodeRLP(s *rlp.Stream) error {
+	if err := s.Decode((*net.IP)(v)); err != nil {
+		return err
+	}
+	if len(*v) != 16 {
+		return fmt.Errorf("invalid IPv6 address, want 16 bytes: %v", *v)
 	}
 	return nil
 }

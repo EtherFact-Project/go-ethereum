@@ -1,18 +1,18 @@
-// Copyright 2014 The go-ethereum Authors
-// This file is part of the go-ethereum library.
+// Copyright 2014 The go-etherfact Authors
+// This file is part of the go-etherfact library.
 //
-// The go-ethereum library is free software: you can redistribute it and/or modify
+// The go-etherfact library is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// The go-ethereum library is distributed in the hope that it will be useful,
+// The go-etherfact library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU Lesser General Public License for more details.
 //
 // You should have received a copy of the GNU Lesser General Public License
-// along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
+// along with the go-etherfact library. If not, see <http://www.gnu.org/licenses/>.
 
 package rlp
 
@@ -92,7 +92,7 @@ func Encode(w io.Writer, val interface{}) error {
 	return eb.toWriter(w)
 }
 
-// EncodeToBytes returns the RLP encoding of val.
+// EncodeBytes returns the RLP encoding of val.
 // Please see the documentation of Encode for the encoding rules.
 func EncodeToBytes(val interface{}) ([]byte, error) {
 	eb := encbufPool.Get().(*encbuf)
@@ -104,7 +104,7 @@ func EncodeToBytes(val interface{}) ([]byte, error) {
 	return eb.toBytes(), nil
 }
 
-// EncodeToReader returns a reader from which the RLP encoding of val
+// EncodeReader returns a reader from which the RLP encoding of val
 // can be read. The returned size is the total size of the encoded
 // data.
 //
@@ -151,10 +151,11 @@ func puthead(buf []byte, smalltag, largetag byte, size uint64) int {
 	if size < 56 {
 		buf[0] = smalltag + byte(size)
 		return 1
+	} else {
+		sizesize := putint(buf[1:], size)
+		buf[0] = largetag + byte(sizesize)
+		return sizesize + 1
 	}
-	sizesize := putint(buf[1:], size)
-	buf[0] = largetag + byte(sizesize)
-	return sizesize + 1
 }
 
 // encbufs are pooled.
@@ -217,7 +218,7 @@ func (w *encbuf) list() *listhead {
 func (w *encbuf) listEnd(lh *listhead) {
 	lh.size = w.size() - lh.offset - lh.size
 	if lh.size < 56 {
-		w.lhsize++ // length encoded into kind tag
+		w.lhsize += 1 // length encoded into kind tag
 	} else {
 		w.lhsize += 1 + intsize(uint64(lh.size))
 	}
@@ -321,9 +322,10 @@ func (r *encReader) next() []byte {
 			p := r.buf.str[r.strpos:head.offset]
 			r.strpos += sizebefore
 			return p
+		} else {
+			r.lhpos++
+			return head.encode(r.buf.sizebuf)
 		}
-		r.lhpos++
-		return head.encode(r.buf.sizebuf)
 
 	case r.strpos < len(r.buf.str):
 		// String data at the end, after all list headers.
@@ -574,8 +576,9 @@ func makePtrWriter(typ reflect.Type) (writer, error) {
 	writer := func(val reflect.Value, w *encbuf) error {
 		if val.IsNil() {
 			return nilfunc(w)
+		} else {
+			return etypeinfo.writer(val.Elem(), w)
 		}
-		return etypeinfo.writer(val.Elem(), w)
 	}
 	return writer, err
 }

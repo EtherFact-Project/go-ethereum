@@ -1,18 +1,18 @@
-// Copyright 2017 The go-ethereum Authors
-// This file is part of the go-ethereum library.
+// Copyright 2017 The go-etherfact Authors
+// This file is part of the go-etherfact library.
 //
-// The go-ethereum library is free software: you can redistribute it and/or modify
+// The go-etherfact library is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// The go-ethereum library is distributed in the hope that it will be useful,
+// The go-etherfact library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU Lesser General Public License for more details.
 //
 // You should have received a copy of the GNU Lesser General Public License
-// along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
+// along with the go-etherfact library. If not, see <http://www.gnu.org/licenses/>.
 
 package tests
 
@@ -29,7 +29,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ethereum/go-ethereum/params"
+	"github.com/EtherFact-Project/go-etherfact/params"
 )
 
 var (
@@ -42,7 +42,7 @@ var (
 	difficultyTestDir  = filepath.Join(baseDir, "BasicTests")
 )
 
-func readJSON(reader io.Reader, value interface{}) error {
+func readJson(reader io.Reader, value interface{}) error {
 	data, err := ioutil.ReadAll(reader)
 	if err != nil {
 		return fmt.Errorf("error reading JSON file: %v", err)
@@ -57,14 +57,14 @@ func readJSON(reader io.Reader, value interface{}) error {
 	return nil
 }
 
-func readJSONFile(fn string, value interface{}) error {
+func readJsonFile(fn string, value interface{}) error {
 	file, err := os.Open(fn)
 	if err != nil {
 		return err
 	}
 	defer file.Close()
 
-	err = readJSON(file, value)
+	err = readJson(file, value)
 	if err != nil {
 		return fmt.Errorf("%s in file %s", err.Error(), fn)
 	}
@@ -169,8 +169,9 @@ func (tm *testMatcher) checkFailure(t *testing.T, name string, err error) error 
 		if err != nil {
 			t.Logf("error: %v", err)
 			return nil
+		} else {
+			return fmt.Errorf("test succeeded unexpectedly")
 		}
-		return fmt.Errorf("test succeeded unexpectedly")
 	}
 	return err
 }
@@ -212,7 +213,7 @@ func (tm *testMatcher) runTestFile(t *testing.T, path, name string, runTest inte
 
 	// Load the file as map[string]<testType>.
 	m := makeMapFromTestFunc(runTest)
-	if err := readJSONFile(path, m.Addr().Interface()); err != nil {
+	if err := readJsonFile(path, m.Addr().Interface()); err != nil {
 		t.Fatal(err)
 	}
 

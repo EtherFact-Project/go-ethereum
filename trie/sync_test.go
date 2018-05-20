@@ -1,18 +1,18 @@
-// Copyright 2015 The go-ethereum Authors
-// This file is part of the go-ethereum library.
+// Copyright 2015 The go-etherfact Authors
+// This file is part of the go-etherfact library.
 //
-// The go-ethereum library is free software: you can redistribute it and/or modify
+// The go-etherfact library is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// The go-ethereum library is distributed in the hope that it will be useful,
+// The go-etherfact library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU Lesser General Public License for more details.
 //
 // You should have received a copy of the GNU Lesser General Public License
-// along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
+// along with the go-etherfact library. If not, see <http://www.gnu.org/licenses/>.
 
 package trie
 
@@ -20,14 +20,15 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/ethdb"
+	"github.com/EtherFact-Project/go-etherfact/common"
+	"github.com/EtherFact-Project/go-etherfact/ethdb"
 )
 
 // makeTestTrie create a sample test trie to test node-wise reconstruction.
 func makeTestTrie() (*Database, *Trie, map[string][]byte) {
 	// Create an empty trie
-	triedb := NewDatabase(ethdb.NewMemDatabase())
+	diskdb, _ := ethdb.NewMemDatabase()
+	triedb := NewDatabase(diskdb)
 	trie, _ := New(common.Hash{}, triedb)
 
 	// Fill it with some arbitrary data
@@ -88,13 +89,18 @@ func checkTrieConsistency(db *Database, root common.Hash) error {
 
 // Tests that an empty trie is not scheduled for syncing.
 func TestEmptyTrieSync(t *testing.T) {
-	dbA := NewDatabase(ethdb.NewMemDatabase())
-	dbB := NewDatabase(ethdb.NewMemDatabase())
-	emptyA, _ := New(common.Hash{}, dbA)
-	emptyB, _ := New(emptyRoot, dbB)
+	diskdbA, _ := ethdb.NewMemDatabase()
+	triedbA := NewDatabase(diskdbA)
+
+	diskdbB, _ := ethdb.NewMemDatabase()
+	triedbB := NewDatabase(diskdbB)
+
+	emptyA, _ := New(common.Hash{}, triedbA)
+	emptyB, _ := New(emptyRoot, triedbB)
 
 	for i, trie := range []*Trie{emptyA, emptyB} {
-		if req := NewTrieSync(trie.Hash(), ethdb.NewMemDatabase(), nil).Missing(1); len(req) != 0 {
+		diskdb, _ := ethdb.NewMemDatabase()
+		if req := NewTrieSync(trie.Hash(), diskdb, nil).Missing(1); len(req) != 0 {
 			t.Errorf("test %d: content requested for empty trie: %v", i, req)
 		}
 	}
@@ -110,7 +116,7 @@ func testIterativeTrieSync(t *testing.T, batch int) {
 	srcDb, srcTrie, srcData := makeTestTrie()
 
 	// Create a destination trie and sync with the scheduler
-	diskdb := ethdb.NewMemDatabase()
+	diskdb, _ := ethdb.NewMemDatabase()
 	triedb := NewDatabase(diskdb)
 	sched := NewTrieSync(srcTrie.Hash(), diskdb, nil)
 
@@ -143,7 +149,7 @@ func TestIterativeDelayedTrieSync(t *testing.T) {
 	srcDb, srcTrie, srcData := makeTestTrie()
 
 	// Create a destination trie and sync with the scheduler
-	diskdb := ethdb.NewMemDatabase()
+	diskdb, _ := ethdb.NewMemDatabase()
 	triedb := NewDatabase(diskdb)
 	sched := NewTrieSync(srcTrie.Hash(), diskdb, nil)
 
@@ -181,7 +187,7 @@ func testIterativeRandomTrieSync(t *testing.T, batch int) {
 	srcDb, srcTrie, srcData := makeTestTrie()
 
 	// Create a destination trie and sync with the scheduler
-	diskdb := ethdb.NewMemDatabase()
+	diskdb, _ := ethdb.NewMemDatabase()
 	triedb := NewDatabase(diskdb)
 	sched := NewTrieSync(srcTrie.Hash(), diskdb, nil)
 
@@ -222,7 +228,7 @@ func TestIterativeRandomDelayedTrieSync(t *testing.T) {
 	srcDb, srcTrie, srcData := makeTestTrie()
 
 	// Create a destination trie and sync with the scheduler
-	diskdb := ethdb.NewMemDatabase()
+	diskdb, _ := ethdb.NewMemDatabase()
 	triedb := NewDatabase(diskdb)
 	sched := NewTrieSync(srcTrie.Hash(), diskdb, nil)
 
@@ -269,7 +275,7 @@ func TestDuplicateAvoidanceTrieSync(t *testing.T) {
 	srcDb, srcTrie, srcData := makeTestTrie()
 
 	// Create a destination trie and sync with the scheduler
-	diskdb := ethdb.NewMemDatabase()
+	diskdb, _ := ethdb.NewMemDatabase()
 	triedb := NewDatabase(diskdb)
 	sched := NewTrieSync(srcTrie.Hash(), diskdb, nil)
 
@@ -309,7 +315,7 @@ func TestIncompleteTrieSync(t *testing.T) {
 	srcDb, srcTrie, _ := makeTestTrie()
 
 	// Create a destination trie and sync with the scheduler
-	diskdb := ethdb.NewMemDatabase()
+	diskdb, _ := ethdb.NewMemDatabase()
 	triedb := NewDatabase(diskdb)
 	sched := NewTrieSync(srcTrie.Hash(), diskdb, nil)
 

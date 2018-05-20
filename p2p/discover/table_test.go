@@ -1,18 +1,18 @@
-// Copyright 2015 The go-ethereum Authors
-// This file is part of the go-ethereum library.
+// Copyright 2015 The go-etherfact Authors
+// This file is part of the go-etherfact library.
 //
-// The go-ethereum library is free software: you can redistribute it and/or modify
+// The go-etherfact library is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// The go-ethereum library is distributed in the hope that it will be useful,
+// The go-etherfact library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU Lesser General Public License for more details.
 //
 // You should have received a copy of the GNU Lesser General Public License
-// along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
+// along with the go-etherfact library. If not, see <http://www.gnu.org/licenses/>.
 
 package discover
 
@@ -28,8 +28,8 @@ import (
 	"testing/quick"
 	"time"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/EtherFact-Project/go-etherfact/common"
+	"github.com/EtherFact-Project/go-etherfact/crypto"
 )
 
 func TestTable_pingReplace(t *testing.T) {
@@ -582,26 +582,26 @@ func (*preminedTestnet) ping(toid NodeID, toaddr *net.UDPAddr) error { return ni
 
 // mine generates a testnet struct literal with nodes at
 // various distances to the given target.
-func (tn *preminedTestnet) mine(target NodeID) {
-	tn.target = target
-	tn.targetSha = crypto.Keccak256Hash(tn.target[:])
+func (n *preminedTestnet) mine(target NodeID) {
+	n.target = target
+	n.targetSha = crypto.Keccak256Hash(n.target[:])
 	found := 0
 	for found < bucketSize*10 {
 		k := newkey()
 		id := PubkeyID(&k.PublicKey)
 		sha := crypto.Keccak256Hash(id[:])
-		ld := logdist(tn.targetSha, sha)
-		if len(tn.dists[ld]) < bucketSize {
-			tn.dists[ld] = append(tn.dists[ld], id)
+		ld := logdist(n.targetSha, sha)
+		if len(n.dists[ld]) < bucketSize {
+			n.dists[ld] = append(n.dists[ld], id)
 			fmt.Println("found ID with ld", ld)
 			found++
 		}
 	}
 	fmt.Println("&preminedTestnet{")
-	fmt.Printf("	target: %#v,\n", tn.target)
-	fmt.Printf("	targetSha: %#v,\n", tn.targetSha)
-	fmt.Printf("	dists: [%d][]NodeID{\n", len(tn.dists))
-	for ld, ns := range tn.dists {
+	fmt.Printf("	target: %#v,\n", n.target)
+	fmt.Printf("	targetSha: %#v,\n", n.targetSha)
+	fmt.Printf("	dists: [%d][]NodeID{\n", len(n.dists))
+	for ld, ns := range n.dists {
 		if len(ns) == 0 {
 			continue
 		}

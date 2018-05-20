@@ -1,18 +1,18 @@
-// Copyright 2014 The go-ethereum Authors
-// This file is part of the go-ethereum library.
+// Copyright 2014 The go-etherfact Authors
+// This file is part of the go-etherfact library.
 //
-// The go-ethereum library is free software: you can redistribute it and/or modify
+// The go-etherfact library is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// The go-ethereum library is distributed in the hope that it will be useful,
+// The go-etherfact library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU Lesser General Public License for more details.
 //
 // You should have received a copy of the GNU Lesser General Public License
-// along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
+// along with the go-etherfact library. If not, see <http://www.gnu.org/licenses/>.
 
 package crypto
 
@@ -25,7 +25,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/ethereum/go-ethereum/common"
+	"github.com/EtherFact-Project/go-etherfact/common"
 )
 
 var testAddrHex = "970e8128ab834e8eac17ab8e3812f010678cf791"
@@ -154,7 +154,7 @@ func TestValidateSignatureValues(t *testing.T) {
 	minusOne := big.NewInt(-1)
 	one := common.Big1
 	zero := common.Big0
-	secp256k1nMinus1 := new(big.Int).Sub(secp256k1N, common.Big1)
+	secp256k1nMinus1 := new(big.Int).Sub(secp256k1_N, common.Big1)
 
 	// correct v,r,s
 	check(true, 0, one, one)
@@ -181,9 +181,9 @@ func TestValidateSignatureValues(t *testing.T) {
 	// correct sig with max r,s
 	check(true, 0, secp256k1nMinus1, secp256k1nMinus1)
 	// correct v, combinations of incorrect r,s at upper limit
-	check(false, 0, secp256k1N, secp256k1nMinus1)
-	check(false, 0, secp256k1nMinus1, secp256k1N)
-	check(false, 0, secp256k1N, secp256k1N)
+	check(false, 0, secp256k1_N, secp256k1nMinus1)
+	check(false, 0, secp256k1nMinus1, secp256k1_N)
+	check(false, 0, secp256k1_N, secp256k1_N)
 
 	// current callers ensures r,s cannot be negative, but let's test for that too
 	// as crypto package could be used stand-alone

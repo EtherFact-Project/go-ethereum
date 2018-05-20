@@ -1,31 +1,31 @@
-// Copyright 2016 The go-ethereum Authors
-// This file is part of the go-ethereum library.
+// Copyright 2016 The go-etherfact Authors
+// This file is part of the go-etherfact library.
 //
-// The go-ethereum library is free software: you can redistribute it and/or modify
+// The go-etherfact library is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// The go-ethereum library is distributed in the hope that it will be useful,
+// The go-etherfact library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU Lesser General Public License for more details.
 //
 // You should have received a copy of the GNU Lesser General Public License
-// along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
+// along with the go-etherfact library. If not, see <http://www.gnu.org/licenses/>.
 
 // Contains all the wrappers from the core/types package.
 
-package geth
+package getf
 
 import (
 	"encoding/json"
 	"errors"
 	"fmt"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/EtherFact-Project/go-etherfact/common"
+	"github.com/EtherFact-Project/go-etherfact/core/types"
+	"github.com/EtherFact-Project/go-etherfact/rlp"
 )
 
 // A Nonce is a 64-bit hash which proves (combined with the mix-hash) that
@@ -80,7 +80,7 @@ func (h *Header) EncodeRLP() ([]byte, error) {
 	return rlp.EncodeToBytes(h.header)
 }
 
-// NewHeaderFromJSON parses a header from a JSON data dump.
+// NewHeaderFromJSON parses a header from an JSON data dump.
 func NewHeaderFromJSON(data string) (*Header, error) {
 	h := &Header{
 		header: new(types.Header),
@@ -91,7 +91,7 @@ func NewHeaderFromJSON(data string) (*Header, error) {
 	return h, nil
 }
 
-// EncodeJSON encodes a header into a JSON data dump.
+// EncodeJSON encodes a header into an JSON data dump.
 func (h *Header) EncodeJSON() (string, error) {
 	data, err := json.Marshal(h.header)
 	return string(data), err
@@ -151,7 +151,7 @@ func (b *Block) EncodeRLP() ([]byte, error) {
 	return rlp.EncodeToBytes(b.block)
 }
 
-// NewBlockFromJSON parses a block from a JSON data dump.
+// NewBlockFromJSON parses a block from an JSON data dump.
 func NewBlockFromJSON(data string) (*Block, error) {
 	b := &Block{
 		block: new(types.Block),
@@ -162,7 +162,7 @@ func NewBlockFromJSON(data string) (*Block, error) {
 	return b, nil
 }
 
-// EncodeJSON encodes a block into a JSON data dump.
+// EncodeJSON encodes a block into an JSON data dump.
 func (b *Block) EncodeJSON() (string, error) {
 	data, err := json.Marshal(b.block)
 	return string(data), err
@@ -220,7 +220,7 @@ func (tx *Transaction) EncodeRLP() ([]byte, error) {
 	return rlp.EncodeToBytes(tx.tx)
 }
 
-// NewTransactionFromJSON parses a transaction from a JSON data dump.
+// NewTransactionFromJSON parses a transaction from an JSON data dump.
 func NewTransactionFromJSON(data string) (*Transaction, error) {
 	tx := &Transaction{
 		tx: new(types.Transaction),
@@ -231,7 +231,7 @@ func NewTransactionFromJSON(data string) (*Transaction, error) {
 	return tx, nil
 }
 
-// EncodeJSON encodes a transaction into a JSON data dump.
+// EncodeJSON encodes a transaction into an JSON data dump.
 func (tx *Transaction) EncodeJSON() (string, error) {
 	data, err := json.Marshal(tx.tx)
 	return string(data), err
@@ -312,7 +312,7 @@ func (r *Receipt) EncodeRLP() ([]byte, error) {
 	return rlp.EncodeToBytes(r.receipt)
 }
 
-// NewReceiptFromJSON parses a transaction receipt from a JSON data dump.
+// NewReceiptFromJSON parses a transaction receipt from an JSON data dump.
 func NewReceiptFromJSON(data string) (*Receipt, error) {
 	r := &Receipt{
 		receipt: new(types.Receipt),
@@ -323,13 +323,12 @@ func NewReceiptFromJSON(data string) (*Receipt, error) {
 	return r, nil
 }
 
-// EncodeJSON encodes a transaction receipt into a JSON data dump.
+// EncodeJSON encodes a transaction receipt into an JSON data dump.
 func (r *Receipt) EncodeJSON() (string, error) {
 	data, err := rlp.EncodeToBytes(r.receipt)
 	return string(data), err
 }
 
-func (r *Receipt) GetStatus() int               { return int(r.receipt.Status) }
 func (r *Receipt) GetPostState() []byte         { return r.receipt.PostState }
 func (r *Receipt) GetCumulativeGasUsed() int64  { return int64(r.receipt.CumulativeGasUsed) }
 func (r *Receipt) GetBloom() *Bloom             { return &Bloom{r.receipt.Bloom} }

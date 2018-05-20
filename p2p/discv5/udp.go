@@ -1,18 +1,18 @@
-// Copyright 2016 The go-ethereum Authors
-// This file is part of the go-ethereum library.
+// Copyright 2016 The go-etherfact Authors
+// This file is part of the go-etherfact library.
 //
-// The go-ethereum library is free software: you can redistribute it and/or modify
+// The go-etherfact library is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// The go-ethereum library is distributed in the hope that it will be useful,
+// The go-etherfact library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU Lesser General Public License for more details.
 //
 // You should have received a copy of the GNU Lesser General Public License
-// along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
+// along with the go-etherfact library. If not, see <http://www.gnu.org/licenses/>.
 
 package discv5
 
@@ -24,29 +24,37 @@ import (
 	"net"
 	"time"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/p2p/nat"
-	"github.com/ethereum/go-ethereum/p2p/netutil"
-	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/EtherFact-Project/go-etherfact/common"
+	"github.com/EtherFact-Project/go-etherfact/crypto"
+	"github.com/EtherFact-Project/go-etherfact/log"
+	"github.com/EtherFact-Project/go-etherfact/p2p/nat"
+	"github.com/EtherFact-Project/go-etherfact/p2p/netutil"
+	"github.com/EtherFact-Project/go-etherfact/rlp"
 )
 
 const Version = 4
 
 // Errors
 var (
-	errPacketTooSmall = errors.New("too small")
-	errBadPrefix      = errors.New("bad prefix")
-	errTimeout        = errors.New("RPC timeout")
+	errPacketTooSmall   = errors.New("too small")
+	errBadPrefix        = errors.New("bad prefix")
+	errExpired          = errors.New("expired")
+	errUnsolicitedReply = errors.New("unsolicited reply")
+	errUnknownNode      = errors.New("unknown node")
+	errTimeout          = errors.New("RPC timeout")
+	errClockWarp        = errors.New("reply deadline too far in the future")
+	errClosed           = errors.New("socket closed")
 )
 
 // Timeouts
 const (
 	respTimeout = 500 * time.Millisecond
+	queryDelay  = 1000 * time.Millisecond
 	expiration  = 20 * time.Second
 
-	driftThreshold = 10 * time.Second // Allowed clock drift before warning user
+	ntpFailureThreshold = 32               // Continuous timeouts after which to check NTP
+	ntpWarningCooldown  = 10 * time.Minute // Minimum amount of time to pass before repeating NTP warning
+	driftThreshold      = 10 * time.Second // Allowed clock drift before warning user
 )
 
 // RPC request structures

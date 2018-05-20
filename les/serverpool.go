@@ -1,18 +1,18 @@
-// Copyright 2016 The go-ethereum Authors
-// This file is part of the go-ethereum library.
+// Copyright 2016 The go-etherfact Authors
+// This file is part of the go-etherfact library.
 //
-// The go-ethereum library is free software: you can redistribute it and/or modify
+// The go-etherfact library is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// The go-ethereum library is distributed in the hope that it will be useful,
+// The go-etherfact library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU Lesser General Public License for more details.
 //
 // You should have received a copy of the GNU Lesser General Public License
-// along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
+// along with the go-etherfact library. If not, see <http://www.gnu.org/licenses/>.
 
 // Package les implements the Light Ethereum Subprotocol.
 package les
@@ -27,13 +27,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ethereum/go-ethereum/common/mclock"
-	"github.com/ethereum/go-ethereum/ethdb"
-	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/p2p"
-	"github.com/ethereum/go-ethereum/p2p/discover"
-	"github.com/ethereum/go-ethereum/p2p/discv5"
-	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/EtherFact-Project/go-etherfact/common/mclock"
+	"github.com/EtherFact-Project/go-etherfact/ethdb"
+	"github.com/EtherFact-Project/go-etherfact/log"
+	"github.com/EtherFact-Project/go-etherfact/p2p"
+	"github.com/EtherFact-Project/go-etherfact/p2p/discover"
+	"github.com/EtherFact-Project/go-etherfact/p2p/discv5"
+	"github.com/EtherFact-Project/go-etherfact/rlp"
 )
 
 const (
@@ -73,6 +73,7 @@ const (
 	// and a short term value which is adjusted exponentially with a factor of
 	// pstatRecentAdjust with each dial/connection and also returned exponentially
 	// to the average with the time constant pstatReturnToMeanTC
+	pstatRecentAdjust   = 0.1
 	pstatReturnToMeanTC = time.Hour
 	// node address selection weight is dropped by a factor of exp(-addrFailDropLn) after
 	// each unsuccessful connection (restored after a successful one)
@@ -82,6 +83,9 @@ const (
 	responseScoreTC = time.Millisecond * 100
 	delayScoreTC    = time.Second * 5
 	timeoutPow      = 10
+	// peerSelectMinWeight is added to calculated weights at request peer selection
+	// to give poorly performing peers a little chance of coming back
+	peerSelectMinWeight = 0.005
 	// initStatsWeight is used to initialize previously unknown peers with good
 	// statistics to give a chance to prove themselves
 	initStatsWeight = 1
@@ -601,8 +605,9 @@ func (e *discoveredEntry) Weight() int64 {
 	t := time.Duration(mclock.Now() - e.lastDiscovered)
 	if t <= discoverExpireStart {
 		return 1000000000
+	} else {
+		return int64(1000000000 * math.Exp(-float64(t-discoverExpireStart)/float64(discoverExpireConst)))
 	}
-	return int64(1000000000 * math.Exp(-float64(t-discoverExpireStart)/float64(discoverExpireConst)))
 }
 
 // knownEntry implements wrsItem

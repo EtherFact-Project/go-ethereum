@@ -1,18 +1,18 @@
-// Copyright 2015 The go-ethereum Authors
-// This file is part of the go-ethereum library.
+// Copyright 2015 The go-etherfact Authors
+// This file is part of the go-etherfact library.
 //
-// The go-ethereum library is free software: you can redistribute it and/or modify
+// The go-etherfact library is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// The go-ethereum library is distributed in the hope that it will be useful,
+// The go-etherfact library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU Lesser General Public License for more details.
 //
 // You should have received a copy of the GNU Lesser General Public License
-// along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
+// along with the go-etherfact library. If not, see <http://www.gnu.org/licenses/>.
 
 package abi
 
@@ -111,14 +111,9 @@ func (arguments Arguments) unpackTuple(v interface{}, marshalledValues []interfa
 	if err := requireUnpackKind(value, typ, kind, arguments); err != nil {
 		return err
 	}
-
-	// If the interface is a struct, get of abi->struct_field mapping
-
-	var abi2struct map[string]string
+	// If the output interface is a struct, make sure names don't collide
 	if kind == reflect.Struct {
-		var err error
-		abi2struct, err = mapAbiToStructFields(arguments, value)
-		if err != nil {
+		if err := requireUniqueStructFieldNames(arguments); err != nil {
 			return err
 		}
 	}
@@ -128,10 +123,9 @@ func (arguments Arguments) unpackTuple(v interface{}, marshalledValues []interfa
 
 		switch kind {
 		case reflect.Struct:
-			if structField, ok := abi2struct[arg.Name]; ok {
-				if err := set(value.FieldByName(structField), reflectValue, arg); err != nil {
-					return err
-				}
+			err := unpackStruct(value, reflectValue, arg)
+			if err != nil {
+				return err
 			}
 		case reflect.Slice, reflect.Array:
 			if value.Len() < i {
@@ -157,22 +151,17 @@ func (arguments Arguments) unpackAtomic(v interface{}, marshalledValues []interf
 	if len(marshalledValues) != 1 {
 		return fmt.Errorf("abi: wrong length, expected single value, got %d", len(marshalledValues))
 	}
-
 	elem := reflect.ValueOf(v).Elem()
 	kind := elem.Kind()
 	reflectValue := reflect.ValueOf(marshalledValues[0])
 
-	var abi2struct map[string]string
 	if kind == reflect.Struct {
-		var err error
-		if abi2struct, err = mapAbiToStructFields(arguments, elem); err != nil {
+		//make sure names don't collide
+		if err := requireUniqueStructFieldNames(arguments); err != nil {
 			return err
 		}
-		arg := arguments.NonIndexed()[0]
-		if structField, ok := abi2struct[arg.Name]; ok {
-			return set(elem.FieldByName(structField), reflectValue, arg)
-		}
-		return nil
+
+		return unpackStruct(elem, reflectValue, arguments[0])
 	}
 
 	return set(elem, reflectValue, arguments.NonIndexed()[0])
@@ -287,4 +276,19 @@ func capitalise(input string) string {
 		return ""
 	}
 	return strings.ToUpper(input[:1]) + input[1:]
+}
+
+//unpackStruct extracts each argument into its corresponding struct field
+func unpackStruct(value, reflectValue reflect.Value, arg Argument) error {
+	name := capitalise(arg.Name)
+	typ := value.Type()
+	for j := 0; j < typ.NumField(); j++ {
+		// TODO read tags: `abi:"fieldName"`
+		if typ.Field(j).Name == name {
+			if err := set(value.Field(j), reflectValue, arg); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }

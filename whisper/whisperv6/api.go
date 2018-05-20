@@ -1,18 +1,18 @@
-// Copyright 2016 The go-ethereum Authors
-// This file is part of the go-ethereum library.
+// Copyright 2016 The go-etherfact Authors
+// This file is part of the go-etherfact library.
 //
-// The go-ethereum library is free software: you can redistribute it and/or modify
+// The go-etherfact library is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// The go-ethereum library is distributed in the hope that it will be useful,
+// The go-etherfact library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU Lesser General Public License for more details.
 //
 // You should have received a copy of the GNU Lesser General Public License
-// along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
+// along with the go-etherfact library. If not, see <http://www.gnu.org/licenses/>.
 
 package whisperv6
 
@@ -24,12 +24,16 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/p2p/discover"
-	"github.com/ethereum/go-ethereum/rpc"
+	"github.com/EtherFact-Project/go-etherfact/common"
+	"github.com/EtherFact-Project/go-etherfact/common/hexutil"
+	"github.com/EtherFact-Project/go-etherfact/crypto"
+	"github.com/EtherFact-Project/go-etherfact/log"
+	"github.com/EtherFact-Project/go-etherfact/p2p/discover"
+	"github.com/EtherFact-Project/go-etherfact/rpc"
+)
+
+const (
+	filterTimeout = 300 // filters are considered timeout out after filterTimeout seconds
 )
 
 // List of errors
@@ -227,9 +231,8 @@ type newMessageOverride struct {
 	Padding   hexutil.Bytes
 }
 
-// Post posts a message on the Whisper network.
-// returns the hash of the message in case of success.
-func (api *PublicWhisperAPI) Post(ctx context.Context, req NewMessage) (hexutil.Bytes, error) {
+// Post a message on the Whisper network.
+func (api *PublicWhisperAPI) Post(ctx context.Context, req NewMessage) (bool, error) {
 	var (
 		symKeyGiven = len(req.SymKeyID) > 0
 		pubKeyGiven = len(req.PublicKey) > 0
@@ -238,7 +241,7 @@ func (api *PublicWhisperAPI) Post(ctx context.Context, req NewMessage) (hexutil.
 
 	// user must specify either a symmetric or an asymmetric key
 	if (symKeyGiven && pubKeyGiven) || (!symKeyGiven && !pubKeyGiven) {
-		return nil, ErrSymAsym
+		return false, ErrSymAsym
 	}
 
 	params := &MessageParams{
@@ -253,20 +256,20 @@ func (api *PublicWhisperAPI) Post(ctx context.Context, req NewMessage) (hexutil.
 	// Set key that is used to sign the message
 	if len(req.Sig) > 0 {
 		if params.Src, err = api.w.GetPrivateKey(req.Sig); err != nil {
-			return nil, err
+			return false, err
 		}
 	}
 
 	// Set symmetric key that is used to encrypt the message
 	if symKeyGiven {
 		if params.Topic == (TopicType{}) { // topics are mandatory with symmetric encryption
-			return nil, ErrNoTopics
+			return false, ErrNoTopics
 		}
 		if params.KeySym, err = api.w.GetSymKey(req.SymKeyID); err != nil {
-			return nil, err
+			return false, err
 		}
 		if !validateDataIntegrity(params.KeySym, aesKeyLength) {
-			return nil, ErrInvalidSymmetricKey
+			return false, ErrInvalidSymmetricKey
 		}
 	}
 
@@ -274,47 +277,36 @@ func (api *PublicWhisperAPI) Post(ctx context.Context, req NewMessage) (hexutil.
 	if pubKeyGiven {
 		params.Dst = crypto.ToECDSAPub(req.PublicKey)
 		if !ValidatePublicKey(params.Dst) {
-			return nil, ErrInvalidPublicKey
+			return false, ErrInvalidPublicKey
 		}
 	}
 
 	// encrypt and sent message
 	whisperMsg, err := NewSentMessage(params)
 	if err != nil {
-		return nil, err
+		return false, err
 	}
 
-	var result []byte
 	env, err := whisperMsg.Wrap(params)
 	if err != nil {
-		return nil, err
+		return false, err
 	}
 
 	// send to specific node (skip PoW check)
 	if len(req.TargetPeer) > 0 {
 		n, err := discover.ParseNode(req.TargetPeer)
 		if err != nil {
-			return nil, fmt.Errorf("failed to parse target peer: %s", err)
+			return false, fmt.Errorf("failed to parse target peer: %s", err)
 		}
-		err = api.w.SendP2PMessage(n.ID[:], env)
-		if err == nil {
-			hash := env.Hash()
-			result = hash[:]
-		}
-		return result, err
+		return true, api.w.SendP2PMessage(n.ID[:], env)
 	}
 
 	// ensure that the message PoW meets the node's minimum accepted PoW
 	if req.PowTarget < api.w.MinPow() {
-		return nil, ErrTooLowPoW
+		return false, ErrTooLowPoW
 	}
 
-	err = api.w.Send(env)
-	if err == nil {
-		hash := env.Hash()
-		result = hash[:]
-	}
-	return result, err
+	return true, api.w.Send(env)
 }
 
 //go:generate gencodec -type Criteria -field-override criteriaOverride -out gen_criteria_json.go
